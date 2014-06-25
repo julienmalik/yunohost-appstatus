@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>YunoHost • index</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height" />
+    <link rel="shortcut icon" href="/favicon.ico?v=2">
+    
+    <link rel="stylesheet" type="text/css" href="_css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="_css/hl.css">
+    <link rel="stylesheet" type="text/css" href="_css/solarized_dark.min.css">
+    <link rel="stylesheet" type="text/css" href="_css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="_css/style.css">
+    
+    <!-- Always define js console -->
+    <script type="text/javascript">if (typeof console === "undefined" || typeof console.log === "undefined") {console = {};console.log = function () {};}</script>
+    <script type="text/javascript" src="_js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="_js/bootstrap.min.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="panel-group" id="app-accordion"></div>
+</div>
+
+<script type="text/template" id="app-template">
+  <div class="panel {panel_style}">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <a data-toggle="collapse" data-parent="#app-accordion" href="#app_{app_id}">{app_name} <em><small>({app_id})</small></em></a>
+      </div>
+    </div>
+    <div class="panel-collapse collapse app_{app_id}">
+      <div class="panel-body">
+        <p><strong>Description</strong>: {app_description}</p>
+        <p><strong>Last update (UTC)</strong>: {app_update}</p>
+        <p><strong>Maintainer</strong>: {app_maintainer} <small class="text-muted">({app_mail})</small></p>
+        <p><strong>Git</strong>: {app_git} <small class="text-muted">({app_branch})</small></p>
+        <p><strong>Published revision</strong>: {app_published_rev}</p>
+        <p><strong>Latest revision</strong>: {app_trunk_rev}</p>
+        <a href="{app_diff_url}" target="_blank" class="btn btn-default">View diff</a>
+    </div>
+  </div>
+</script>
+
+
+<script>
+
+  function timeConverter(UNIX_timestamp) {
+      var a = new Date(UNIX_timestamp*1000);
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var year = a.getFullYear();
+      var month = months[a.getMonth()];
+      var date = a.getDate();
+      var hour = a.getHours();
+      var min = a.getMinutes();
+      if (hour < 10) { hour = '0' + hour; }
+      if (min < 10) { min = '0' + min; }
+      var time = date+' '+month+' '+year+' at '+hour+':'+min;
+      return time;
+  }
+
+  $(document).ready(function () {
+
+    $.getJSON('http://app.yunohost.org/list.json', function(app_list) {
+      console.log(app_list);
+      $.each(app_list, function(app_id, infos) {
+        var url = infos["git"]["url"];
+        var re = /https:\/\/github.com\/(.+)\/(.+)/;
+        var github_username = url.replace(re, "$1");
+        var github_repo = url.replace(re, "$2")
+                            .replace(/\.git$/, "");
+        
+        latest_commit_apiurl = "https://api.github.com/repos/{user}/{repo}/git/refs/heads/{branch}"
+          .replace('{user}', github_username)
+          .replace('{repo}', github_repo)
+          .replace('{branch}', infos["git"]["branch"]);
+
+        $.getJSON(latest_commit_apiurl, function(ref) {
+          latest_rev = ref['object']['sha'];
+          published_rev = infos["git"]["revision"];
+          
+          var style = "panel-success";
+          if (latest_rev != published_rev) {
+            style = "panel-danger";
+          }
+          
+          var diff_url = "https://github.com/{user}/{repo}/compare/{first}...{second}"
+                          .replace('{user}', github_username)
+                          .replace('{repo}', github_repo)
+                          .replace('{first}', published_rev)
+                          .replace('{second}', latest_rev);
+
+          html = $('#app-template').html()
+                  .replace(/{app_id}/g, app_id)
+                  .replace(/{app_name}/g, infos.manifest.name)
+                  .replace('{app_description}', infos.manifest.description.en)
+                  .replace('{app_maintainer}', infos.manifest.developer.name)
+                  .replace('{app_mail}', infos.manifest.developer.email)
+                  .replace('{app_git}', infos.git.url)
+                  .replace('{app_branch}', infos.git.branch)
+                  .replace('{app_update}', timeConverter(infos.lastUpdate))
+                  .replace('{app_published_rev}', published_rev)
+                  .replace('{app_trunk_rev}', latest_rev)
+                  .replace('{panel_style}', style)
+                  .replace('{app_diff_url}', diff_url);
+          $('#app-accordion').append(html);
+          $('.app_'+ app_id).attr('id', 'app_'+ app_id);
+          
+          
+        }); // $.getJSON(latest_commit_apiurl,
+      }); // $.each(app_list
+    }); // $.getJSON('http://app.yunohost.org/list.json'
+  }); // $(document).ready(function ()
+</script>
+
+
+</body>
+</html>
