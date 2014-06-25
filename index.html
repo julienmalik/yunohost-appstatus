@@ -9,12 +9,6 @@
     
     <link rel="stylesheet" type="text/css" href="css/bootstrap-3.1.1.min.css">
     <link rel="stylesheet" type="text/css" href="css/bootstrap-3.1.1-theme.min.css">
-    <!--
-    <link rel="stylesheet" type="text/css" href="_css/hl.css">
-    <link rel="stylesheet" type="text/css" href="_css/solarized_dark.min.css">
-    <link rel="stylesheet" type="text/css" href="_css/style.css">
-    <link rel="stylesheet" type="text/css" href="_css/fonts.css">
-    -->
     
     <!-- Always define js console -->
     <script type="text/javascript">if (typeof console === "undefined" || typeof console.log === "undefined") {console = {};console.log = function () {};}</script>
@@ -25,14 +19,21 @@
 <body>
 
 <div class="container">
-  <div class="panel-group" id="app-accordion"></div>
+
+   <div>
+     <h1>Status of YunoHost released apps</h1>
+   </div>
+   <div class="panel-group" id="app-accordion"></div>
 </div>
 
 <script type="text/template" id="app-template">
   <div class="panel {panel_style}">
     <div class="panel-heading">
       <div class="panel-title">
-        <a data-toggle="collapse" data-parent="#app-accordion" href="#app_{app_id}">{app_name} <em><small>({app_id})</small></em></a>
+        <a data-toggle="collapse" data-parent="#app-accordion" href="#app_{app_id}">{app_name} <em><small>({app_id})</small></em>  </a>
+        <div class="pull-right">
+          <small>{app_status}<small>
+        </div>
       </div>
     </div>
     <div class="panel-collapse collapse app_{app_id}">
@@ -95,21 +96,42 @@
                           .replace('{first}', published_rev)
                           .replace('{second}', latest_rev);
 
-          html = $('#app-template').html()
-                  .replace(/{app_id}/g, app_id)
-                  .replace(/{app_name}/g, infos.manifest.name)
-                  .replace('{app_description}', infos.manifest.description.en)
-                  .replace('{app_maintainer}', infos.manifest.developer.name)
-                  .replace('{app_mail}', infos.manifest.developer.email)
-                  .replace('{app_git}', infos.git.url)
-                  .replace('{app_branch}', infos.git.branch)
-                  .replace('{app_update}', timeConverter(infos.lastUpdate))
-                  .replace('{app_published_rev}', published_rev)
-                  .replace('{app_trunk_rev}', latest_rev)
-                  .replace('{panel_style}', style)
-                  .replace('{app_diff_url}', diff_url);
-          $('#app-accordion').append(html);
-          $('.app_'+ app_id).attr('id', 'app_'+ app_id);
+          var diff_api_url = "https://api.github.com/repos/{user}/{repo}/compare/{first}...{second}"
+                          .replace('{user}', github_username)
+                          .replace('{repo}', github_repo)
+                          .replace('{first}', published_rev)
+                          .replace('{second}', latest_rev);
+          console.log(diff_api_url);
+          $.getJSON(diff_api_url, {async: false}, function(diff) {
+          
+            var status = '';
+            if (diff['total_commits'] > 0) {
+              status = diff['total_commits'] + ' commits behind';
+            }
+            
+            html = $('#app-template').html()
+                    .replace(/{app_id}/g, app_id)
+                    .replace(/{app_name}/g, infos.manifest.name)
+                    .replace('{app_description}', infos.manifest.description.en)
+                    .replace('{app_maintainer}', infos.manifest.developer.name)
+                    .replace('{app_mail}', infos.manifest.developer.email)
+                    .replace('{app_git}', infos.git.url)
+                    .replace('{app_branch}', infos.git.branch)
+                    .replace('{app_update}', timeConverter(infos.lastUpdate))
+                    .replace('{app_published_rev}', published_rev)
+                    .replace('{app_trunk_rev}', latest_rev)
+                    .replace('{panel_style}', style)
+                    .replace('{app_status}', status)
+                    .replace('{app_diff_url}', diff_url);
+            $('#app-accordion').append(html);
+            $('.app_'+ app_id).attr('id', 'app_'+ app_id);
+            
+          }); // $.getJSON(diff_api_url
+         
+         
+          
+          
+          
           
           
         }); // $.getJSON(latest_commit_apiurl,
