@@ -86,12 +86,12 @@
         $.getJSON(latest_commit_apiurl, function(ref) {
           latest_rev = ref['object']['sha'];
           published_rev = infos["git"]["revision"];
-          
+
           var style = "panel-success";
           if (latest_rev != published_rev) {
             style = "panel-danger";
           }
-          
+
           var diff_url = "https://github.com/{user}/{repo}/compare/{first}...{second}"
                           .replace('{user}', github_username)
                           .replace('{repo}', github_repo)
@@ -103,6 +103,7 @@
                           .replace('{repo}', github_repo)
                           .replace('{first}', published_rev)
                           .replace('{second}', latest_rev);
+
           console.log(diff_api_url);
           $.getJSON(diff_api_url, {async: false}, function(diff) {
           
@@ -120,8 +121,8 @@
                     .replace(/{app_git}/g, infos.git.url)
                     .replace(/{app_branch}/g, infos.git.branch)
                     .replace(/{app_update}/g, timeConverter(infos.lastUpdate))
-                    .replace(/{app_published_rev}/g, published_rev)
-                    .replace(/{app_trunk_rev}/g, latest_rev)
+                    .replace('{app_published_rev}', published_rev)
+                    .replace('{app_trunk_rev}', latest_rev)
                     .replace(/{panel_style}/g, style)
                     .replace(/{app_status}/g, status)
                     .replace(/{app_diff_url}/g, diff_url);
@@ -129,13 +130,6 @@
             $('.app_'+ app_id).attr('id', 'app_'+ app_id);
             
           }); // $.getJSON(diff_api_url
-         
-         
-          
-          
-          
-          
-          
         }); // $.getJSON(latest_commit_apiurl,
       }); // $.each(app_list
     }); // $.getJSON('http://app.yunohost.org/list.json'
