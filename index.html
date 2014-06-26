@@ -31,8 +31,10 @@
     <div class="panel-heading">
       <div class="panel-title">
         <a data-toggle="collapse" data-parent="#app-accordion" href="#app_{app_id}">{app_name} <em><small>({app_id})</small></em>  </a>
-        <div class="pull-right">
-          <small>{app_status}<small>
+        <div class="pull-right small">
+          <a href="{app_diff_url}" target="_blank">
+            <small>{app_status}</small>
+          </a>
         </div>
       </div>
     </div>
@@ -112,17 +114,17 @@
             html = $('#app-template').html()
                     .replace(/{app_id}/g, app_id)
                     .replace(/{app_name}/g, infos.manifest.name)
-                    .replace('{app_description}', infos.manifest.description.en)
-                    .replace('{app_maintainer}', infos.manifest.developer.name)
-                    .replace('{app_mail}', infos.manifest.developer.email)
-                    .replace('{app_git}', infos.git.url)
-                    .replace('{app_branch}', infos.git.branch)
-                    .replace('{app_update}', timeConverter(infos.lastUpdate))
-                    .replace('{app_published_rev}', published_rev)
-                    .replace('{app_trunk_rev}', latest_rev)
-                    .replace('{panel_style}', style)
-                    .replace('{app_status}', status)
-                    .replace('{app_diff_url}', diff_url);
+                    .replace(/{app_description}/g, infos.manifest.description.en)
+                    .replace(/{app_maintainer}/g, infos.manifest.developer.name)
+                    .replace(/{app_mail}/g, infos.manifest.developer.email)
+                    .replace(/{app_git}/g, infos.git.url)
+                    .replace(/{app_branch}/g, infos.git.branch)
+                    .replace(/{app_update}/g, timeConverter(infos.lastUpdate))
+                    .replace(/{app_published_rev}/g, published_rev)
+                    .replace(/{app_trunk_rev}/g, latest_rev)
+                    .replace(/{panel_style}/g, style)
+                    .replace(/{app_status}/g, status)
+                    .replace(/{app_diff_url}/g, diff_url);
             $('#app-accordion').append(html);
             $('.app_'+ app_id).attr('id', 'app_'+ app_id);
             
